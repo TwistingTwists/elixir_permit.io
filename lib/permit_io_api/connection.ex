@@ -10,12 +10,12 @@ defmodule PermitIoAPI.Connection do
   use Tesla
 
   # Add any middleware here (authentication)
-  plug Tesla.Middleware.BaseUrl, "http://localhost"
-  plug Tesla.Middleware.Headers, [{"user-agent", "Elixir"}]
-  plug Tesla.Middleware.EncodeJson, engine: Poison
+  plug(Tesla.Middleware.BaseUrl, "http://localhost")
+  # "http://permitio-pdp.fly.dev:7766"
+  plug(Tesla.Middleware.Headers, [{"user-agent", "Elixir"}])
+  plug(Tesla.Middleware.EncodeJson, engine: Poison)
 
-  @scopes [
-  ]
+  @scopes []
 
   @doc """
   Configure a client connection using a provided OAuth2 token as a Bearer token
@@ -28,10 +28,10 @@ defmodule PermitIoAPI.Connection do
 
   Tesla.Env.client
   """
-  @spec new(String.t) :: Tesla.Env.client
+  @spec new(String.t()) :: Tesla.Env.client()
   def new(token) when is_binary(token) do
     Tesla.client([
-      {Tesla.Middleware.Headers,  [{"authorization", "Bearer #{token}"}]}
+      {Tesla.Middleware.Headers, [{"authorization", "Bearer #{token}"}]}
     ])
   end
 
@@ -47,11 +47,12 @@ defmodule PermitIoAPI.Connection do
 
   Tesla.Env.client
   """
-  @spec new(((list(String.t)) -> String.t)) :: Tesla.Env.client
+  @spec new((list(String.t()) -> String.t())) :: Tesla.Env.client()
   def new(token_fetcher) when is_function(token_fetcher) do
     token_fetcher.(@scopes)
     |> new
   end
+
   @doc """
   Configure an authless client connection
 
@@ -59,8 +60,10 @@ defmodule PermitIoAPI.Connection do
 
   Tesla.Env.client
   """
-  @spec new() :: Tesla.Env.client
-  def new do
-    Tesla.client([])
+  @spec new(list(tuple())) :: Tesla.Env.client()
+  def new(middlewares \\ [])
+
+  def new(middlewares) when is_list(middlewares) do
+    Tesla.client(middlewares)
   end
 end
