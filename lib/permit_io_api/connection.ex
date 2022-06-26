@@ -29,41 +29,46 @@ defmodule PermitIoAPI.Connection do
   Tesla.Env.client
   """
   @spec new(String.t()) :: Tesla.Env.client()
-  def new(token) when is_binary(token) do
-    Tesla.client([
-      {Tesla.Middleware.Headers, [{"authorization", "Bearer #{token}"}]}
-    ])
+  def new(token, middlewares \\ [])
+
+  def new(token, middlewares) when is_binary(token) do
+    Tesla.client(
+      middlewares ++
+        [
+          {Tesla.Middleware.Headers, [{"authorization", "Bearer #{token}"}]}
+        ]
+    )
   end
 
-  @doc """
-  Configure a client connection using a function which yields a Bearer token.
+  # @doc """
+  # Configure a client connection using a function which yields a Bearer token.
 
-  ## Parameters
+  # ## Parameters
 
-  - token_fetcher (function arity of 1): Callback which provides an OAuth2 token
-    given a list of scopes
+  # - token_fetcher (function arity of 1): Callback which provides an OAuth2 token
+  #   given a list of scopes
 
-  ## Returns
+  # ## Returns
 
-  Tesla.Env.client
-  """
-  @spec new((list(String.t()) -> String.t())) :: Tesla.Env.client()
-  def new(token_fetcher) when is_function(token_fetcher) do
+  # Tesla.Env.client
+  # """
+  @spec new((list(String.t()) -> String.t()), list(tuple())) :: Tesla.Env.client()
+  def new(token_fetcher, middlewares) when is_function(token_fetcher) do
     token_fetcher.(@scopes)
-    |> new
+    |> new(middlewares)
   end
 
-  @doc """
-  Configure an authless client connection
+  # @doc """
+  # Configure an authless client connection
 
-  # Returns
+  # # Returns
 
-  Tesla.Env.client
-  """
-  @spec new(list(tuple())) :: Tesla.Env.client()
-  def new(middlewares \\ [])
+  # Tesla.Env.client
+  # """
 
-  def new(middlewares) when is_list(middlewares) do
+  # @spec new(list(tuple())) :: Tesla.Env.client()
+
+  def new(token, middlewares) when is_list(middlewares) do
     Tesla.client(middlewares)
   end
 end
